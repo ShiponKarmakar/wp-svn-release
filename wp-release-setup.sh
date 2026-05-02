@@ -648,6 +648,25 @@ alias_exists_in_profile() {
   grep -qE "^[[:space:]]*alias[[:space:]]+${name}=" "$profile"
 }
 
+# alias_points_to_dir <name> <profile> <source_dir>
+# Returns 0 if the alias already exists AND its target line references the
+# given source_dir (i.e. it's the same plugin's alias). Used so a re-run
+# doesn't treat an existing-correct alias as a conflict.
+alias_points_to_dir() {
+  local name="$1" profile="$2" source_dir="$3" line
+  [[ -f "$profile" ]] || return 1
+  line="$(grep -E "^[[:space:]]*alias[[:space:]]+${name}=" "$profile" | head -1)"
+  [[ -n "$line" ]] || return 1
+  # Compare by substring — paths can vary in quoting style
+  case "$line" in
+    *"\"$source_dir\""*) return 0 ;;
+    *"'$source_dir'"*)   return 0 ;;
+    *"$source_dir "*)    return 0 ;;
+    *"$source_dir\""*)   return 0 ;;
+  esac
+  return 1
+}
+
 update_aliases_md() {
   local alias_name="$1" slug="$2" source_dir="$3"
   local md="$SCRIPT_DIR/ALIASES.md" today
@@ -698,7 +717,14 @@ setup_per_plugin_alias() {
       continue
     fi
     if alias_exists_in_profile "$alias_name" "$profile"; then
-      warn "  Alias '$alias_name' already exists in $profile"
+      # Smart check: if the existing alias already points to THIS plugin's
+      # source folder, it's not a conflict — we're just re-running setup.
+      if alias_points_to_dir "$alias_name" "$profile" "$source_dir"; then
+        ok "Alias '$alias_name' is already configured for this plugin — nothing to add."
+        PLUGIN_ALIAS_ADDED="$alias_name"
+        return 0
+      fi
+      warn "  Alias '$alias_name' already exists in $profile but points to a DIFFERENT folder."
       if ! ask_yn "  Pick a different name?" Y; then
         return 0
       fi
