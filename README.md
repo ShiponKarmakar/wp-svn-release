@@ -292,13 +292,95 @@ svn cleanup           # if "working copy locked"
 ```
 
 ### I forgot what I named my per-plugin alias
-Three ways to find it:
+
+Three ways to find it, easiest first:
 
 ```bash
-cat ~/wp-svn-release/ALIASES.md           # the auto-tracked list
-grep '^alias' ~/.zshrc | grep -i wprel    # search shell profile
-alias | grep -i wp                        # search loaded aliases
+# 1. The auto-tracked list (one row per plugin, with source folder + date added)
+cat ~/wp-svn-release/ALIASES.md
+
+# 2. Search your shell profile directly
+grep -E '^[[:space:]]*alias' ~/.zshrc | grep -v '^[[:space:]]*#'
+
+# 3. List every alias loaded in your current shell, filter for the wp ones
+alias | grep -iE 'wp|svn|release'
 ```
+
+> 💡 **Make this even easier**: add this one line to your `~/.zshrc`, then `source ~/.zshrc`:
+>
+> ```bash
+> alias myplugins='cat ~/wp-svn-release/ALIASES.md'
+> ```
+>
+> Now `myplugins` from any terminal instantly shows every plugin alias on your machine.
+
+### How to edit, rename, or remove a per-plugin alias
+
+Per-plugin aliases live in your shell profile (`~/.zshrc` or similar) as plain text lines like:
+
+```bash
+# wp-release per-plugin alias for my-plugin
+alias mp='cd "/Users/you/path/to/my-plugin" && wprel'
+```
+
+#### Edit (change the source folder it points to)
+
+You moved the plugin source to a new location? Open the profile and update the path:
+
+```bash
+# Open ~/.zshrc in your editor
+open -a "TextEdit" ~/.zshrc          # macOS
+nano ~/.zshrc                         # cross-platform terminal editor
+code ~/.zshrc                         # VS Code
+```
+
+Find the line `alias <name>='cd "..." && wprel'` and change the path between the quotes. Save, then reload:
+
+```bash
+source ~/.zshrc
+type <name>                           # confirm it now points to the new path
+```
+
+#### Rename (change the alias name itself)
+
+Same idea — open the profile and change the name on the left side of the `=`. Example:
+
+```diff
+- alias mp='cd "/Users/you/my-plugin" && wprel'
++ alias mpr='cd "/Users/you/my-plugin" && wprel'
+```
+
+Then:
+
+```bash
+source ~/.zshrc
+unalias mp 2>/dev/null               # remove the old name from this shell session
+type mpr                             # confirm the new name works
+```
+
+Also update `~/wp-svn-release/ALIASES.md` if you want the tracked list to stay accurate (open it in any text editor and edit the relevant row).
+
+#### Remove (delete a per-plugin alias)
+
+Open `~/.zshrc`, find the two lines (the `# wp-release per-plugin alias for X` comment and the `alias` line below it), and delete both. Reload:
+
+```bash
+source ~/.zshrc
+unalias <old-name> 2>/dev/null       # remove from current shell
+```
+
+Also delete the matching row from `~/wp-svn-release/ALIASES.md` if you want.
+
+#### Quickest path: re-run the wizard
+
+If editing a profile by hand feels risky, just **delete the old alias lines manually**, then run the wizard again from the plugin folder. It'll prompt for a fresh alias name with the smart defaults:
+
+```bash
+cd /path/to/your/plugin/source
+~/wp-svn-release/wp-release-setup.sh
+```
+
+When the wizard sees an existing `.svnrelease` config, it pre-fills your previous answers — just press Enter through everything except the alias name.
 
 ### Wrong values in `.svnrelease`
 Two ways to fix:
