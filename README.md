@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 wp-svn-release
+# 🚀 WordPress SVN Release
 
 **Universal, interactive release tool for WordPress.org plugins.**
 
@@ -15,6 +15,37 @@ Auto-detects your plugin, validates versions, handles SVN — ship a release wit
 [Why](#-why) • [Install](#-install-2-minutes) • [Configure](#-configure-each-plugin-30-seconds) • [Release](#-release-a-new-version) • [How it works](#-how-it-works) • [Troubleshooting](#-troubleshooting)
 
 </div>
+
+---
+
+## ⚡ Quickstart (5 minutes, 5 commands)
+
+For the impatient. Detailed walkthrough is in the sections below if you want to understand each step.
+
+```bash
+# 1. Get the tool
+git clone https://github.com/ShiponKarmakar/wp-svn-release.git ~/wp-svn-release
+chmod +x ~/wp-svn-release/*.sh
+
+# 2. One-time machine setup (asks for your WP.org username, then just press Enter)
+~/wp-svn-release/wp-release-setup.sh
+
+# 3. Reload your shell
+source ~/.zshrc
+
+# 4. Per-plugin setup — run inside your plugin's source folder, just press Enter for everything
+cd /path/to/your/plugin/source
+~/wp-svn-release/wp-release-setup.sh
+
+# 5. Release a new version
+#    → bump the "Version:" header in your main .php file
+#    → bump the "Stable tag:" line in readme.txt
+#    → then:
+wprel --dry-run 1.2.4    # preview first (no SVN writes)
+wprel 1.2.4              # ship it
+```
+
+That's it. You're publishing to WordPress.org.
 
 ---
 
