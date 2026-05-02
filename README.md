@@ -12,7 +12,7 @@ Auto-detects your plugin, validates versions, handles SVN — ship a release wit
 [![Maintained](https://img.shields.io/badge/maintained-yes-brightgreen.svg)]()
 [![Made by Shipon](https://img.shields.io/badge/made%20by-Shipon%20Karmakar-blue.svg)](https://github.com/ShiponKarmakar)
 
-[Why](#-why) • [Install](#-install-2-minutes) • [Configure](#-configure-each-plugin-30-seconds) • [Release](#-release-a-new-version) • [How it works](#-how-it-works) • [Troubleshooting](#-troubleshooting)
+[Quickstart](#-quickstart-5-minutes-5-commands) • [Why](#-why) • [Release](#-release-a-new-version) • [How it works](#-how-it-works) • [Troubleshooting](#-troubleshooting)
 
 </div>
 
@@ -20,7 +20,7 @@ Auto-detects your plugin, validates versions, handles SVN — ship a release wit
 
 ## ⚡ Quickstart (5 minutes, 5 commands)
 
-For the impatient. Detailed walkthrough is in the sections below if you want to understand each step.
+For the impatient. Each command below is a single copy-paste.
 
 ```bash
 # 1. Get the tool
@@ -46,6 +46,8 @@ wprel 1.2.4              # ship it
 ```
 
 That's it. You're publishing to WordPress.org.
+
+> 💡 **Bonus:** at the end of step 4, the wizard offers to add a **per-plugin shortcut alias** (e.g. `mp` for `my-plugin`). If you accept, you can release that plugin from any folder with `mp 1.2.4` — no `cd` needed. Skip it if you prefer typing `wprel` from the plugin folder.
 
 ---
 
@@ -75,7 +77,7 @@ The tool validates the version against three places (`Version:` header, `Stable 
 | **`wp-release-setup.sh`** | One-time setup wizard (machine-wide config + per-plugin config). |
 | **`wp-release.sh`** | The daily release tool. The `wprel` alias points here. |
 | **`README.md`** | This file. |
-| **`.gitignore`** | Keeps personal aliases (`ALIASES.md`) and SVN passwords out of git. |
+| **`.gitignore`** | Keeps your personal alias log (`ALIASES.md`) and per-plugin configs out of git. |
 
 ---
 
@@ -94,121 +96,6 @@ You also need a **WordPress.org account** with at least one plugin you've publis
 <https://profiles.wordpress.org/me/profile/edit/group/3/?screen=svn-password>
 
 (Different from your WP.org login password. You set it once, ever. SVN remembers it via your OS keychain after the first commit.)
-
----
-
-## 🚀 Install (2 minutes)
-
-### Step 1 — Clone the repo
-
-```bash
-git clone https://github.com/ShiponKarmakar/wp-svn-release.git ~/wp-svn-release
-cd ~/wp-svn-release
-chmod +x wp-release.sh wp-release-setup.sh
-```
-
-### Step 2 — Run the setup wizard
-
-```bash
-./wp-release-setup.sh
-```
-
-You'll see:
-
-```
-═══════════════════════════════════════════════════════════════
-  Phase 1 — Machine setup (one time per developer)
-═══════════════════════════════════════════════════════════════
-
-  These are MACHINE-WIDE settings that apply to every plugin you
-  ever release. The wizard only asks for your username — the rest
-  uses safe defaults you can edit by hand later if needed.
-
-Your WordPress.org username: _
-```
-
-**Type your WP.org username and press Enter.** Then a summary appears:
-
-```
-─────────────────────────────────────────────────────────────
-  About to install on this machine:
-    WP.org username:    your-username
-    SVN checkouts base: /Users/you/wp-svn
-    Shell alias:        wprel
-    Shell profile:      /Users/you/.zshrc
-─────────────────────────────────────────────────────────────
-
-Continue with these settings? [Y/n] _
-```
-
-**Press Enter.** Done. The wizard appends three lines to your shell profile and creates `~/wp-svn/` for future SVN checkouts.
-
-### Step 3 — Reload your shell
-
-```bash
-source ~/.zshrc        # or ~/.bashrc if you use bash
-type wprel             # confirm the alias is loaded
-```
-
-You should see:
-
-```
-wprel is an alias for /Users/you/wp-svn-release/wp-release.sh
-```
-
-✅ Machine setup is complete.
-
----
-
-## 🔧 Configure each plugin (30 seconds)
-
-Each plugin needs to be told once where its SVN checkout folder lives. Run the same wizard from inside the plugin's source folder:
-
-```bash
-cd /path/to/your/plugin/source            # the folder with your .php files and readme.txt
-~/wp-svn-release/wp-release-setup.sh
-```
-
-The wizard auto-skips Phase 1 (already done) and runs only Phase 2:
-
-```
-═══════════════════════════════════════════════════════════════
-  Phase 2 — Plugin setup (one time per plugin)
-═══════════════════════════════════════════════════════════════
-
-  Linking your plugin SOURCE folder to its SVN folder.
-
-  Plugin source folder (where you develop)
-    ↳ detected: /Users/you/path/to/your/plugin
-    ↳ Press Enter to accept, or type a different path: _
-
-  Plugin slug (the WP.org repo name)
-    ↳ detected: my-plugin
-    ↳ Press Enter to accept: _
-
-  Main plugin PHP file
-    ↳ detected: my-plugin.php
-    ↳ Press Enter to accept: _
-
-  SVN checkout folder
-    ↳ detected: /Users/you/wp-svn/my-plugin
-    ↳ Press Enter to accept: _
-```
-
-**Just press Enter at every prompt** — the auto-detected defaults are correct in 95% of cases.
-
-If your SVN folder doesn't exist yet, the wizard offers to run `svn checkout` for you. Say **y** to that.
-
-At the end, it offers to add a **per-plugin shortcut alias** so you can release without `cd`-ing first:
-
-```
-Add a shortcut alias for this plugin? [y/N] y
-Alias name (lowercase letters/digits/hyphens only) [mp_rel]: mp
-```
-
-Now `mp 1.2.3` from anywhere on your machine releases this plugin.
-
-✅ Plugin setup is complete. The wizard saved a `.svnrelease` config file in your plugin folder.
 
 ---
 
@@ -295,7 +182,7 @@ That's it. Your release is live on WordPress.org within ~15 minutes.
 |---|---|
 | `wprel <version>` | Release a new version. The main daily command. |
 | `wprel --dry-run <version>` | Preview the release. No SVN writes. **Run this before every real release.** |
-| `wprel --reconfigure <version>` | Re-run the per-plugin wizard before releasing. Use if you moved the SVN folder. |
+| `wprel --reconfigure <version>` | Re-run the per-plugin wizard before releasing. Use if anything in `.svnrelease` needs to change (slug, main file, SVN folder, etc.). |
 | `wprel --help` | Show help. |
 | `<short-alias> <version>` | Per-plugin alias (if you set one). Releases that specific plugin from anywhere. |
 
@@ -426,7 +313,7 @@ Two ways to fix:
 - **Always dry-run first:** `wprel --dry-run 1.2.4` before `wprel 1.2.4`. Free safety net.
 - **Use `.distignore`** in your plugin source folder to control what gets shipped to WP.org. The release script honors it (matches WP.org's official tooling). If absent, a sensible default exclude list is used.
 - **Per-plugin alias = power user move.** When you have 5+ plugins, typing `mp 1.2.4` from anywhere beats remembering paths.
-- **Commit `.svnrelease`** to your plugin's git repo. Anyone on the team who clones it can immediately run `wprel <version>` after their own machine setup — no per-plugin config needed.
+- **Commit `.svnrelease` to your plugin's git repo** (not this `wp-svn-release` repo — its `.gitignore` excludes that file by design). Once committed in your plugin repo, anyone on the team who clones the plugin can immediately run `wprel <version>` after their own one-time machine setup — no per-plugin config needed.
 
 ---
 
