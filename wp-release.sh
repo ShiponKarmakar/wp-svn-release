@@ -314,15 +314,22 @@ find "$SRC_DIR" \( -name ".DS_Store" -o -name "._*" \) -delete 2>/dev/null || tr
 RSYNC_FLAGS=( -a --delete )
 (( DRY_RUN )) && RSYNC_FLAGS+=( -n -v )
 
+# Critical safety excludes — applied ALWAYS, even when .distignore is present.
+# These should NEVER be shipped to WP.org SVN under any circumstances.
+RSYNC_FLAGS+=(
+  --exclude=.git --exclude=.gitignore --exclude=.gitattributes --exclude=.github
+  --exclude=.DS_Store --exclude='._*' --exclude=Thumbs.db
+  --exclude=.svnrelease --exclude=.wprelease --exclude=.distignore
+)
+
+# Project-specific excludes — additive on top of the safety excludes above.
 if [[ -f "$SRC_DIR/.distignore" ]]; then
-  info "Using .distignore for rsync excludes."
+  info "Using .distignore for additional rsync excludes."
   RSYNC_FLAGS+=( --exclude-from="$SRC_DIR/.distignore" )
 else
   RSYNC_FLAGS+=(
-    --exclude=.git --exclude=.gitignore --exclude=.gitattributes
-    --exclude=.github --exclude=.idea --exclude=.vscode
-    --exclude=.DS_Store --exclude='._*' --exclude=Thumbs.db
-    --exclude=node_modules --exclude=.distignore --exclude=.wprelease
+    --exclude=.idea --exclude=.vscode
+    --exclude=node_modules
     --exclude='.phpcs.xml*' --exclude='phpcs.xml*'
     --exclude='phpunit.xml*' --exclude='composer.*'
     --exclude='package*.json' --exclude=yarn.lock
