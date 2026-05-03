@@ -776,7 +776,9 @@ setup_per_plugin_alias() {
 # ============================== main ===================================
 
 clear 2>/dev/null || true
-section "wp-release-setup — universal WordPress.org release wizard"
+section "WordPress SVN Release — setup wizard"
+echo
+printf "  ${C_DIM}By Shipon Karmakar  ·  https://github.com/ShiponKarmakar/wp-svn-release${C_RESET}\n"
 echo
 echo "  This wizard does TWO things:"
 echo "    1. Configures your machine (one time)."

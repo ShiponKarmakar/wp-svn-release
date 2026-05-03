@@ -69,7 +69,8 @@ ask_yn() {
 
 show_help() {
   cat <<'EOF'
-wp-release — universal WordPress.org plugin release tool
+WordPress SVN Release — universal release tool for WordPress.org plugins
+By Shipon Karmakar  ·  https://github.com/ShiponKarmakar/wp-svn-release
 
 USAGE
   wprel <version>                 release a new version (e.g. wprel 1.2.3)
@@ -82,21 +83,30 @@ REQUIRED ENV (set once with wp-release-setup.sh)
   WP_SVN_BASE   base folder for SVN checkouts (default: ~/wp-svn)
 
 PER-PLUGIN CONFIG (auto-saved by the wizard)
-  .wprelease    in the plugin source root, holds:
+  .svnrelease   in the plugin source root, holds:
                   slug=my-plugin
                   main_file=my-plugin.php
                   svn_dir=/abs/path/to/svn-checkout
+                (legacy .wprelease files are also read for backward compat)
 
 WHAT IT DOES
-  1. Resolves config (env vars + .wprelease + auto-detection from CWD).
+  1. Resolves config (env vars + .svnrelease + auto-detection from CWD).
   2. Triple-validates the version arg against the main file's
      "Version:" header AND readme.txt's "Stable tag:".
   3. Refuses to overwrite an existing tag (WP.org tags are immutable).
   4. Scrubs .DS_Store / ._* from source.
-  5. rsyncs source → trunk/ (honors .distignore if present).
+  5. rsyncs source → trunk/ (always strips .git/.svnrelease/etc.;
+     honors .distignore for additional excludes if present).
   6. Reconciles svn add / svn rm.
   7. svn cp trunk → tags/<version>.
   8. Shows a preview, asks confirmation, then commits.
+
+─────────────────────────────────────────────────────────────────────
+  Built and maintained by Shipon Karmakar
+  GitHub:  https://github.com/ShiponKarmakar/wp-svn-release
+  WP.org:  https://profiles.wordpress.org/shiponkarmakar/
+  License: MIT — free to use, modify, and share
+─────────────────────────────────────────────────────────────────────
 EOF
 }
 
