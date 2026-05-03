@@ -635,11 +635,22 @@ EOF
 
 # Suggest an alias from the slug — first letter of each hyphenated word + "rel".
 suggest_plugin_alias() {
-  local slug="$1" initials
-  initials="$(printf '%s' "$slug" | awk -F'-' '{
-    out=""; for(i=1;i<=NF;i++) out=out substr($i,1,1); print out
-  }')"
-  printf "%srel" "$initials"
+  # Recommend an alias name that's clearly related to the plugin slug.
+  # Uses the first meaningful word of the slug + "rel" — easy to remember
+  # and obviously connected to the plugin (vs cryptic initials).
+  #
+  # Examples:
+  #   domain-search-for-whmcs  →  domainrel
+  #   extra-fields-for-acf     →  extrarel
+  #   sendforce-mail-relay     →  sendforcerel
+  #   bb-press                 →  bbpressrel  (first word too short → join 2 words)
+  local slug="$1" base
+  base="${slug%%-*}"
+  if [[ ${#base} -lt 4 && "$slug" == *-* ]]; then
+    local rest="${slug#*-}"
+    base="${base}${rest%%-*}"
+  fi
+  printf "%srel" "$base"
 }
 
 alias_exists_in_profile() {
@@ -708,6 +719,16 @@ setup_per_plugin_alias() {
 
   local profile="${PROFILE:-$DEFAULT_PROFILE}" suggested alias_name snippet
   suggested="$(suggest_plugin_alias "$slug")"
+
+  echo
+  echo "  Pick a name that's easy to remember and clearly tied to this plugin."
+  echo "  Some good naming patterns:"
+  printf "    • ${C_CYAN}%s${C_RESET}      ${C_DIM}(first word + 'rel' — recommended)${C_RESET}\n" "$suggested"
+  printf "    • ${C_CYAN}%s${C_RESET}      ${C_DIM}(the slug itself)${C_RESET}\n" "$slug"
+  printf "    • ${C_CYAN}release-%s${C_RESET}  ${C_DIM}(prefix style)${C_RESET}\n" "${slug%%-*}"
+  printf "    • ${C_CYAN}r-%s${C_RESET}     ${C_DIM}(short prefix)${C_RESET}\n" "${slug%%-*}"
+  echo "  Avoid common command names (git, ls, cd, etc.) and the universal 'wprel'."
+  echo
 
   while true; do
     alias_name="$(ask "  Alias name (lowercase letters/digits/hyphens only)" "$suggested")"
