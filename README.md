@@ -240,7 +240,7 @@ assets_src=
 2. **Validates the version** against the `Version:` header in the main PHP file AND the `Stable tag:` in `readme.txt`. If any disagree → ❌ refuses.
 3. **Checks `tags/<version>` doesn't already exist in SVN** (immutable). If it does → ❌ refuses.
 4. **Scrubs** `.DS_Store` and `._*` from the source folder.
-5. **`rsync`s** source → `trunk/`, excluding dev artifacts (`.git`, `node_modules`, etc., or your `.distignore` if present).
+5. **`rsync`s** source → `trunk/`. Critical safety excludes (`.git`, `.gitignore`, `.svnrelease`, `.DS_Store`, etc.) are **always** stripped, regardless of any other config. If you have a `.distignore` file, its rules are added on top for project-specific excludes (e.g. `node_modules`, `tests`).
 6. **Reconciles** SVN: `svn add` new files, `svn rm` deleted files.
 7. **Creates `tags/<version>`** as a snapshot of `trunk/`.
 8. **Shows you a preview** of every changed file.
@@ -256,6 +256,8 @@ assets_src=
 - **Refuses to overwrite immutable tags.** WordPress.org tags can never be re-released. If you try `wprel 1.2.3` after 1.2.3 is already up, the tool stops you.
 - **Triple-validates the version.** The version you type must match `Version:` AND `Stable tag:`. Catches the most common release mistake.
 - **Preview before commit.** You always see the full changeset and confirm before any SVN write happens.
+- **Always strips dangerous files.** `.git`, `.svnrelease`, `.gitignore`, `.DS_Store`, `._*`, and similar files are **always** excluded from the SVN sync, even when a custom `.distignore` is present. You can't accidentally ship your local repo metadata to WordPress.org.
+- **Tested on large releases.** Verified to work cleanly on plugins with 100+ changed files in a single release. The script reads SVN status with bash here-strings, not pipes, so it never silently exits on big change-sets.
 
 ---
 
@@ -280,6 +282,26 @@ svn checkout https://plugins.svn.wordpress.org/<your-slug> ~/wp-svn/<your-slug>
 
 ### `command not found: wprel` (or your per-plugin alias)
 The alias is in `~/.zshrc` but your current terminal hasn't loaded it. Run `source ~/.zshrc` or open a new terminal.
+
+### Script exits silently right after the file list, never asks "Commit as v…?"
+You're running an old version that has a SIGPIPE bug on large releases (>40 changed files). Pull the latest:
+
+```bash
+cd ~/wp-svn-release
+git pull
+```
+
+Then recover your SVN working copy and retry:
+
+```bash
+cd ~/wp-svn/<your-slug>
+svn revert -R .
+svn update
+cd /path/to/your/plugin/source
+wprel <version>
+```
+
+The current version uses bash here-strings (`<<<`) instead of pipes, so this can't happen anymore regardless of release size.
 
 ### A release errored out mid-way
 Local SVN state may be inconsistent. Reset it:
@@ -393,7 +415,7 @@ Two ways to fix:
 ## 🌟 Pro tips
 
 - **Always dry-run first:** `wprel --dry-run 1.2.4` before `wprel 1.2.4`. Free safety net.
-- **Use `.distignore`** in your plugin source folder to control what gets shipped to WP.org. The release script honors it (matches WP.org's official tooling). If absent, a sensible default exclude list is used.
+- **Use `.distignore`** in your plugin source folder to add project-specific excludes (e.g. `node_modules`, your test suite, build artifacts). It's additive — `.git`, `.svnrelease`, `.DS_Store`, and other safety items are **always** excluded regardless. The script honors `.distignore` exactly the way WP.org's official tooling does.
 - **Per-plugin alias = power user move.** When you have 5+ plugins, typing `mp 1.2.4` from anywhere beats remembering paths.
 - **Commit `.svnrelease` to your plugin's git repo** (not this `wp-svn-release` repo — its `.gitignore` excludes that file by design). Once committed in your plugin repo, anyone on the team who clones the plugin can immediately run `wprel <version>` after their own one-time machine setup — no per-plugin config needed.
 
