@@ -338,9 +338,10 @@ else
 fi
 
 info "Syncing source → trunk/…"
-# Same SIGPIPE concern as the svn status block below — capture, then trim.
+# Same SIGPIPE concern as the svn status block — capture into a variable,
+# then use a here-string so `tail` doesn't read from a pipe.
 RSYNC_OUT="$(rsync "${RSYNC_FLAGS[@]}" "$SRC_DIR/" "$CFG_SVN_DIR/trunk/" 2>&1 || true)"
-printf '%s\n' "$RSYNC_OUT" | tail -20
+tail -20 <<< "$RSYNC_OUT"
 
 if (( DRY_RUN )); then
   echo
@@ -365,11 +366,12 @@ svn cp trunk "tags/$VERSION"
 
 echo
 echo "==================== About to commit ===================="
-# Capture svn status ONCE — using `| head` triggers SIGPIPE which, with
-# `set -o pipefail`, kills the script silently on large releases (>40 changes).
+# Capture svn status ONCE, then read with here-strings (<<<) instead of pipes.
+# Any pipe through `head -40` would trigger SIGPIPE under `set -o pipefail`
+# on large releases, killing the script silently before the commit prompt.
 STATUS_OUT="$(svn status)"
-printf '%s\n' "$STATUS_OUT" | head -40
-TOTAL_CHANGES="$(printf '%s\n' "$STATUS_OUT" | grep -c . || true)"
+head -40 <<< "$STATUS_OUT"
+TOTAL_CHANGES="$(grep -c . <<< "$STATUS_OUT" || true)"
 printf "  …  (%s total changes)\n" "$TOTAL_CHANGES"
 echo "========================================================="
 echo
