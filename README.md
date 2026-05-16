@@ -303,6 +303,26 @@ wprel <version>
 
 The current version uses bash here-strings (`<<<`) instead of pipes, so this can't happen anymore regardless of release size.
 
+### How to update my SVN password (after WP.org password change)
+
+`wp-svn-release` deliberately does NOT store your SVN password — that's a security best practice. SVN itself caches your password in your OS keychain on first commit (macOS Keychain, Linux libsecret/gnome-keyring) and uses it silently after that.
+
+When you change your password at <https://profiles.wordpress.org/me/profile/edit/group/3/?screen=svn-password>, the cached one becomes stale. To force SVN to prompt for the new one:
+
+```bash
+# 1. Wipe the cached credentials
+rm -rf ~/.subversion/auth/svn.simple/
+
+# 2. Verify the tool still runs
+wprel --dry-run <version>
+
+# 3. Release — SVN will prompt for username + new password,
+#    then cache it for future runs
+wprel <version>
+```
+
+You only need to do this when your WP.org SVN password actually changes. For routine releases, SVN handles authentication silently in the background.
+
 ### A release errored out mid-way
 Local SVN state may be inconsistent. Reset it:
 
