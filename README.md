@@ -18,6 +18,22 @@ Auto-detects your plugin, validates versions, handles SVN — ship a release wit
 
 ---
 
+<div align="center">
+
+## 🖥 Prefer a GUI? Try the macOS App
+
+**[SVNRel — native macOS app](https://svnrel.com/)** built on top of this CLI. Same engine, beautiful interface.
+
+[![Download SVNRel for macOS](https://img.shields.io/badge/Download-SVNRel%20for%20macOS-007AFF?style=for-the-badge&logo=apple)](https://svnrel.com/)
+
+![SVNRel — native macOS app for WordPress.org plugin releases](./screenshot.png)
+
+*Live preflight checks, version validation, real-time release log, one-click commit.*
+
+</div>
+
+---
+
 ## ⚡ Quickstart (5 minutes, 5 commands)
 
 For the impatient. Each command below is a single copy-paste.
